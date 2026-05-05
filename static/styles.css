@@ -1,0 +1,44 @@
+body{
+background-color: #36454F;
+}
+a{
+text-decoration: none;
+color: white;
+
+}
+/* Change color and remove underline on hover */
+a:hover {
+  color: #ff0000;
+  text-decoration: none;
+}
+
+
+.nav{
+display: flex;
+gap: 50px;
+margin-left: 900px;
+margin-top: 50px;
+
+}
+
+.headline{
+display: flex;
+justify-content: center;
+color: white;
+font-size: 80px;
+margin-top: 200px;
+
+}
+
+.main
+{
+height: 100vh;
+width: 100%;
+display: flex;
+justify-content: center;
+align-items: center;
+}
+
+form label {
+    color: white !important;
+}
