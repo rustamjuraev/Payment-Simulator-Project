@@ -69,6 +69,9 @@ def verify_email():
                 session.pop("security-code")
                 db.session.add(new_user)
                 db.session.commit()
+
+                """ here i need to create a wallet for the user """
+
                 flask.flash("Registration successful!")
                 return redirect(url_for("login_page"))
             except Exception as e:
@@ -79,10 +82,51 @@ def verify_email():
             redirect(url_for("register_page"))
     return render_template("verify.html",form=form)
 
-@app.route("/login")
+@app.route("/login",methods=["GET","POST"])
 def login_page():
     form = LoginForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+        user = db.session.execute(db.select(Users).where(Users.email == email)).scalar_one_or_none()
+        if user:
+            if check_password_hash(user.password,password):
+                security_code = generate_security_code()
+                x = send_verification_code(email,security_code)
+                if x != -1:
+                    session["security-code"] = security_code
+                    return redirect(url_for("verify_code"))
+                else:
+                    flask.flash("Failed to send the verification code, check your connection and try again")
+                    return redirect(url_for("login_page"))
+            else:
+                flask.flash("Incorrect password, please try again")
+                return redirect(url_for("login_page"))
+        else:
+            flask.flash("Invalid email address, register with this email first")
+            return redirect(url_for("register_page"))
+
     return render_template("login.html", form=form)
+
+@app.route("/verify-code", methods=["GET","POST"])
+def verify_code():
+    form = VerificationForm()
+    if form.validate_on_submit():
+        security_code = session.get("security-code")
+        input_code = form.security_code.data
+        if input_code == security_code:
+            session.pop("security-code")
+
+            """here i need authentication for the user, i need to include flask authentication here"""
+
+            return redirect(url_for("dashboard_page"))
+
+    return render_template("verify.html", form=form)
+
+"""dashboard page should be available only for authorized users and no one else """
+@app.route("/dashboard")
+def dashboard_page():
+    return render_template("dashboard.html")
 
 @app.route("/logout")
 def logout():
