@@ -27,7 +27,6 @@ justify-content: center;
 color: white;
 font-size: 80px;
 margin-top: 200px;
-
 }
 
 .main
@@ -41,4 +40,14 @@ align-items: center;
 
 form label {
     color: white !important;
+}
+.authorized
+{
+gap:80px;
+margin-left: 1000px;
+}
+
+error
+{
+color: red;
 }

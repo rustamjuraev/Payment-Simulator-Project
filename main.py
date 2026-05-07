@@ -1,11 +1,13 @@
 import os
 from flask import Flask, render_template, redirect, url_for, session
+from flask_login import login_user, logout_user
 from models import db, Users,Wallet,Transactions
 from flask_bootstrap import Bootstrap5
 from forms import RegisterForm,LoginForm,VerificationForm
 import flask
 from utils import send_verification_code, generate_security_code
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, login_required
 
 
 __all__ = [Users,Wallet,Transactions]
@@ -18,6 +20,12 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(Users,int(user_id))
 """ First i need to go through the user authentication system as quickly as possible """
 
 
@@ -58,21 +66,27 @@ def verify_email():
         code = session.get("security-code")
         if code == code_input:
             try:
-                name = session.pop("name")
-                surname = session.pop("surname")
-                email = session.pop("email")
-                password = session.pop("password")
+                name = session.pop("name",None)
+                surname = session.pop("surname",None)
+                email = session.pop("email",None)
+                password = session.pop("password",None)
                 new_user = Users(name=name,
                                  surname=surname,
                                  email=email,
                                  password=password)
                 session.pop("security-code")
                 db.session.add(new_user)
+                db.session.flush()
+
+                user_id = new_user.id
+                balance = 10000
+                currency = "UZS"
+                new_wallet = Wallet(user_id=user_id,
+                                    balance=balance,
+                                    currency=currency)
+                db.session.add(new_wallet)
                 db.session.commit()
-
-                """ here i need to create a wallet for the user """
-
-                flask.flash("Registration successful!")
+                flask.flash("Registration successful, wallet has been allocated for you!")
                 return redirect(url_for("login_page"))
             except Exception as e:
                 print(f"Error: {e}")
@@ -95,6 +109,7 @@ def login_page():
                 x = send_verification_code(email,security_code)
                 if x != -1:
                     session["security-code"] = security_code
+                    session["user-id"] = user.id
                     return redirect(url_for("verify_code"))
                 else:
                     flask.flash("Failed to send the verification code, check your connection and try again")
@@ -116,21 +131,30 @@ def verify_code():
         input_code = form.security_code.data
         if input_code == security_code:
             session.pop("security-code")
-
-            """here i need authentication for the user, i need to include flask authentication here"""
-
+            user_id = session.pop("user-id")
+            user = db.session.get(Users,user_id)
+            login_user(user)
             return redirect(url_for("dashboard_page"))
+
+        else:
+            flask.flash("Incorrect security code, please try again! ")
+            return redirect(url_for("verify_code"))
 
     return render_template("verify.html", form=form)
 
 """dashboard page should be available only for authorized users and no one else """
+
 @app.route("/dashboard")
+@login_required
 def dashboard_page():
+
     return render_template("dashboard.html")
 
 @app.route("/logout")
+@login_required
 def logout():
     """user needs to log out from here"""
+    logout_user()
     return redirect(url_for("home_page"))
 
 if __name__ == "__main__":

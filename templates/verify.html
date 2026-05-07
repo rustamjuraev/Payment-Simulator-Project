@@ -5,6 +5,18 @@
 {% block content %}
 <div class="main">
     <div class="cont">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for category, message in messages %}
+        <p class=" error {{ category }}">{{ message }}</p>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+
             {{render_form(form)}}
     </div>
 </div>

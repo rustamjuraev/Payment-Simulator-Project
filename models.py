@@ -3,12 +3,14 @@ from sqlalchemy import String, DateTime, func, ForeignKey,Float
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
 from typing import List
+from flask_login import UserMixin
+
 
 class Base(DeclarativeBase):
     pass
 db = SQLAlchemy(model_class=Base)
 
-class Users(db.Model):
+class Users(UserMixin,db.Model):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True,unique=True)
     name: Mapped[str] = mapped_column(String(250), nullable=False)
@@ -27,11 +29,11 @@ class Wallet(db.Model):
     user: Mapped["Users"] = relationship(back_populates="wallet")
     sent_transactions: Mapped[List["Transactions"]] = relationship(
         back_populates="sender",
-        foreign_keys="[Transactions.sender_id]"  # 👈 add this
+        foreign_keys="[Transactions.sender_id]"
     )
     received_transactions: Mapped[List["Transactions"]] = relationship(
         back_populates="receiver",
-        foreign_keys="[Transactions.receiver_id]"  # 👈 add this
+        foreign_keys="[Transactions.receiver_id]"
     )
 
 class Transactions(db.Model):

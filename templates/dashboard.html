@@ -4,5 +4,18 @@
 {% block title %} Dashboard {% endblock %}
 
 {% block content %}
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <ul class="flashes">
+      {% for category, message in messages %}
+        <p class=" error {{ category }}">{{ message }}</p>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+
+
 <h1>This is the dashboard for my payment application where i need to have my wallet and a list of transactions</h1>
 {% endblock %}
