@@ -1,34 +1,120 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
 
-{%block title %} Home Page {% endblock %}
+<head>
+<meta charset="UTF-8">
+<title>TrustPay - Payment Simulator</title>
 
-{% block content %}
-{% if current_user.is_authenticated %}
-<div class="nav">
-        <h1><a href="{{url_for('logout')}}">Logout</a></h1>
+<style>
+
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    margin:0;
+    background:#f4f6fb;
+}
+
+/* Navigation bar */
+
+.navbar{
+    background:#1f4ed8;
+    padding:15px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    color:white;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.nav-links a{
+    color:white;
+    text-decoration:none;
+    margin-left:20px;
+    font-weight:500;
+}
+
+.nav-links a:hover{
+    text-decoration:underline;
+}
+
+/* Welcome section */
+
+.hero{
+    height:80vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+}
+
+.hero h1{
+    font-size:42px;
+    margin-bottom:15px;
+}
+
+.hero p{
+    font-size:18px;
+    color:#555;
+    margin-bottom:30px;
+}
+
+.hero a{
+    padding:12px 20px;
+    background:#1f4ed8;
+    color:white;
+    text-decoration:none;
+    border-radius:8px;
+}
+
+.hero a:hover{
+    background:#163aa9;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<!-- Navbar -->
+
+<div class="navbar">
+
+    <div class="logo">
+        TrustPay
     </div>
-    <div>
-    <p class="headline">Welcome to Trust pay!</p>
+
+    <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/register">Register</a>
+        <a href="/login">Login</a>
+        <a href="/logout">Logout</a>
+    </div>
+
 </div>
 
-    {% else %}
-        <div class="nav authorized">
-                <h1><a href="{{url_for('register_page')}}">Register</a></h1>
-                <h1><a href="{{url_for('login_page')}}">Login</a></h1>
-        </div>
-        <p class="headline">Welcome to Trust pay!</p>
-    {% endif %}
 
+<!-- Welcome Section -->
 
+<div class="hero">
 
-{% endblock %}
+    <h1>Welcome to TrustPay</h1>
 
-<div class="nav">
+    <p>
+        A simple payment simulation platform where you can send money,
+        top up your balance and explore how digital payments work.
+    </p>
 
-    </div>
-        <h1><a href="{{url_for('register_page')}}">Register</a></h1>
-        <h1><a href="{{url_for('login_page')}}">Login</a></h1>
-        <h1><a href="{{url_for('logout')}}">Logout</a></h1>
-    <div>
-    <p class="headline">Welcome to Trust pay!</p>
+    <a href="/dashboard">
+        Go to Dashboard
+    </a>
+
 </div>
+
+</body>
+</html>

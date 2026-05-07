@@ -1,6 +1,6 @@
 import os
 from flask import Flask, render_template, redirect, url_for, session
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 from models import db, Users,Wallet,Transactions
 from flask_bootstrap import Bootstrap5
 from forms import RegisterForm,LoginForm,VerificationForm
@@ -131,9 +131,10 @@ def verify_code():
         input_code = form.security_code.data
         if input_code == security_code:
             session.pop("security-code")
-            user_id = session.pop("user-id")
+            user_id = session.get("user-id")
             user = db.session.get(Users,user_id)
             login_user(user)
+            session.pop("user-id")
             return redirect(url_for("dashboard_page"))
 
         else:
@@ -142,12 +143,14 @@ def verify_code():
 
     return render_template("verify.html", form=form)
 
-"""dashboard page should be available only for authorized users and no one else """
 
 @app.route("/dashboard")
 @login_required
 def dashboard_page():
-
+    """the next step is to build a dashboard page and its functionalities. It should take me to other routes to perform
+    certain actions like sending money, top up balance, show card details and my transaction list if clicked"""
+    user_id = current_user.id
+    wallet = db.session.execute(db.select(Wallet).where(Wallet.user_id == user_id))
     return render_template("dashboard.html")
 
 @app.route("/logout")
