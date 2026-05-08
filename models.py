@@ -28,6 +28,9 @@ class Wallet(db.Model):
     balance: Mapped[float] = mapped_column(Float,nullable=False)
     currency: Mapped[str] = mapped_column(String(250),nullable=False)
     user: Mapped["Users"] = relationship(back_populates="wallet")
+    card_number: Mapped[str] = mapped_column(String(250))
+    card_cvc: Mapped[str] = mapped_column(String(250))
+    card_exp: Mapped[str] = mapped_column(String(250))
     sent_transactions: Mapped[List["Transactions"]] = relationship(
         back_populates="sender",
         foreign_keys="[Transactions.sender_id]"

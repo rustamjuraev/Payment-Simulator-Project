@@ -8,7 +8,10 @@ import flask
 from utils import send_verification_code, generate_security_code
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required
-from sqlalchemy import or_,desc,select
+from sqlalchemy import or_,select
+from flask_migrate import Migrate
+from utils import generate_expiry_date,generate_card_number, generate_cvc
+
 
 __all__ = [Users,Wallet,Transactions]
 
@@ -16,6 +19,7 @@ app = Flask(__name__)
 bootstrap = Bootstrap5(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql+psycopg2://postgres:{os.environ['POSTGRES_PASSWORD']}@localhost:5432/flask_db"
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+migrate = Migrate(app,db)
 db.init_app(app)
 with app.app_context():
     db.create_all()
@@ -81,9 +85,15 @@ def verify_email():
                 user_id = new_user.id
                 balance = 10000
                 currency = "UZS"
+                card_number = generate_card_number()
+                exp = generate_expiry_date()
+                cvc = generate_cvc()
                 new_wallet = Wallet(user_id=user_id,
                                     balance=balance,
-                                    currency=currency)
+                                    currency=currency,
+                                    card_number=card_number,
+                                    card_cvc=cvc,
+                                    card_exp=exp)
                 db.session.add(new_wallet)
                 db.session.commit()
                 flask.flash("Registration successful, wallet has been allocated for you!")
