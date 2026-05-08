@@ -145,14 +145,14 @@ th, td{
     <!-- Sidebar -->
 
     <div class="sidebar">
-        <div class="logo">PaySim</div>
+        <div class="logo">TrustPay</div>
 
         <div class="nav">
-            <a href="#">Dashboard</a>
-            <a href="#">Send Money</a>
-            <a href="#">Top Up</a>
-            <a href="#">Card Details</a>
-            <a href="#">Transactions</a>
+            <a href="{{url_for('dashboard_page')}}">Dashboard</a>
+            <a href="{{url_for('send_money')}}">Send Money</a>
+            <a href="{{url_for('top_up')}}">Top Up</a>
+            <a href="{{url_for('see_my_card')}}">Card Details</a>
+            <a href="{{url_for('transactions')}}">Transactions</a>
             <a href="#">Settings</a>
         </div>
     </div>
@@ -162,21 +162,19 @@ th, td{
 
     <div class="main">
 
-        <!-- Top Section -->
 
         <div class="top">
 
-            <!-- Balance -->
 
             <div class="balance-card">
 
                 <h3>Current Balance</h3>
-                <div class="balance">$2,845.60</div>
+                <div class="balance">{{user.wallet.balance}}UZS</div>
 
                 <div class="actions">
-                    <button>Send Money</button>
-                    <button>Top Up</button>
-                    <button>Card Details</button>
+                    <a href="{{url_for('send_money')}}"><button>Send Money</button></a>
+                    <a href="{{url_for('top_up')}}"><button>Top Up</button></a>
+                    <a href="{{url_for('see_my_card')}}"><button>Card Details</button></a>
                 </div>
 
             </div>
@@ -188,11 +186,11 @@ th, td{
                 <h3>Your Card</h3>
 
                 <p style="margin-top:20px;">
-                    VISA **** 4242
+                    UZCARD **** 4242
                 </p>
 
                 <p style="margin-top:10px;">
-                    Alex Smith
+                    {{user.name}} {{user.surname}}
                 </p>
 
                 <p>
@@ -215,7 +213,6 @@ th, td{
                 <thead>
                     <tr>
                         <th>Date</th>
-                        <th>Description</th>
                         <th>Type</th>
                         <th>Amount</th>
                     </tr>
@@ -223,30 +220,27 @@ th, td{
 
                 <tbody>
 
+                {% for transaction in recent_transactions %}
                     <tr>
-                        <td>May 24</td>
-                        <td>Coffee Shop</td>
-                        <td>Payment</td>
-                        <td class="amount-negative">-$4.75</td>
+                        <td>{{transaction.created_at}}</td>
+                        <td>{{transaction.type}}</td>
+                        <td class="amount-negative">{{transaction.amount}}UZS</td>
                     </tr>
-
+                {% endfor %}
                     <tr>
                         <td>May 24</td>
-                        <td>Top Up via Card</td>
                         <td>Top Up</td>
                         <td class="amount-positive">+$100</td>
                     </tr>
 
                     <tr>
                         <td>May 23</td>
-                        <td>Grocery Store</td>
                         <td>Payment</td>
                         <td class="amount-negative">-$58.90</td>
                     </tr>
 
                     <tr>
                         <td>May 23</td>
-                        <td>Transfer to Sam</td>
                         <td>Transfer</td>
                         <td class="amount-negative">-$150</td>
                     </tr>
@@ -262,7 +256,6 @@ th, td{
         </div>
 
     </div>
-
 </div>
 
 </body>

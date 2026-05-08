@@ -9,8 +9,6 @@ def generate_security_code():
         string += str(random.randint(0,9))
     return string
 
-
-
 def send_verification_code(recipient_email,security_code):
     try:
         with SMTP("smtp.gmail.com", port=587) as server:
@@ -27,3 +25,14 @@ def send_verification_code(recipient_email,security_code):
         print("Failed to send email, check connection and try again")
         return -1
 
+def generate_card_number():
+    card_number = "8600"
+    for x in range(0,8):
+        card_number += str(random.randint(0,9))
+    return card_number
+
+def generate_expiry_date():
+    return
+
+def generate_cvc():
+    return

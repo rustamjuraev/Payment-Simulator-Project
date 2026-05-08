@@ -3,12 +3,12 @@ from flask import Flask, render_template, redirect, url_for, session
 from flask_login import login_user, logout_user, current_user
 from models import db, Users,Wallet,Transactions
 from flask_bootstrap import Bootstrap5
-from forms import RegisterForm,LoginForm,VerificationForm
+from forms import RegisterForm,LoginForm,VerificationForm, SendMoneyForm
 import flask
 from utils import send_verification_code, generate_security_code
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required
-
+from sqlalchemy import or_,desc,select
 
 __all__ = [Users,Wallet,Transactions]
 
@@ -93,7 +93,7 @@ def verify_email():
 
         else:
             flask.flash("Wrong verification code!")
-            redirect(url_for("register_page"))
+            return redirect(url_for("register_page"))
     return render_template("verify.html",form=form)
 
 @app.route("/login",methods=["GET","POST"])
@@ -149,9 +149,18 @@ def verify_code():
 def dashboard_page():
     """the next step is to build a dashboard page and its functionalities. It should take me to other routes to perform
     certain actions like sending money, top up balance, show card details and my transaction list if clicked"""
-    user_id = current_user.id
-    wallet = db.session.execute(db.select(Wallet).where(Wallet.user_id == user_id))
-    return render_template("dashboard.html")
+    user = current_user
+    recent_transactions = ((select(Transactions)
+                           .where(
+        or_(
+            Transactions.sender_id==user.wallet.id,
+            Transactions.receiver_id==user.wallet.id
+        )
+    )
+    ).order_by(Transactions.created_at.desc()).limit(4))
+    recent_transactions = db.session.execute(recent_transactions).scalars().all()
+
+    return render_template("dashboard.html", user=user, recent_transactions=recent_transactions)
 
 @app.route("/logout")
 @login_required
@@ -159,6 +168,27 @@ def logout():
     """user needs to log out from here"""
     logout_user()
     return redirect(url_for("home_page"))
+
+@app.route("/send-money")
+@login_required
+def send_money():
+    return render_template("send_money.html",user=current_user)
+
+@app.route("/top-up")
+@login_required
+def top_up():
+    return render_template("top_up.html",user=current_user)
+
+@app.route("/see-details")
+@login_required
+def see_my_card():
+    return render_template("card_details.html")
+
+@app.route("/transactions")
+@login_required
+def transactions():
+    return "This is where i need to have my transaction list displayed!"
+
 
 if __name__ == "__main__":
     app.run(debug=True)

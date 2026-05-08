@@ -1,9 +1,10 @@
 from datetime import datetime
-from sqlalchemy import String, DateTime, func, ForeignKey,Float
+from sqlalchemy import String, DateTime, func, ForeignKey, Float, DATE
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from flask_sqlalchemy import SQLAlchemy
 from typing import List
 from flask_login import UserMixin
+
 
 
 class Base(DeclarativeBase):
@@ -44,6 +45,6 @@ class Transactions(db.Model):
     amount: Mapped[float] = mapped_column(Float,nullable=False)
     status: Mapped[str] = mapped_column(String(250),nullable=False)
     type: Mapped[str] = mapped_column(String(250),nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime,default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DATE,default=func.now())
     sender: Mapped["Wallet"] = relationship(back_populates="sent_transactions",foreign_keys="[Transactions.sender_id]")
     receiver: Mapped["Wallet"] = relationship(back_populates="received_transactions",foreign_keys="[Transactions.receiver_id]")

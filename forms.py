@@ -19,3 +19,9 @@ class VerificationForm(FlaskForm):
     security_code = StringField("Security-Code",validators=[DataRequired()])
     submit = SubmitField("Proceed")
 
+class SendMoneyForm(FlaskForm):
+    card_number = StringField("Recipient Card Number",validators=[DataRequired(), Length(min=16, max=16)])
+    expiry = StringField("Expiry",validators=[DataRequired(), Length(min=5, max=5)])
+    cvv = StringField("CVV",validators=[DataRequired(), Length(min=3, max=3)])
+    amount = StringField("Amount",validators=[DataRequired()])
+    submit = SubmitField("Send Money")

@@ -1,0 +1,69 @@
+
+{% extends "base.html" %}
+
+{% block title %}Card Details{% endblock %}
+
+{% block content %}
+
+<div class="form-card" style="max-width:600px;">
+
+<h2 style="margin-bottom:25px;">My Card</h2>
+
+<!-- Card Preview -->
+
+<div style="
+background:#1f4ed8;
+color:white;
+border-radius:14px;
+padding:25px;
+margin-bottom:25px;
+">
+
+<h3 style="margin-bottom:20px;">TrustPay Card</h3>
+
+<p style="font-size:20px; letter-spacing:2px;">
+8600 1234 5678 4242
+</p>
+
+<div style="margin-top:20px;">
+<p>Rustam Juraev</p>
+<p>Exp: 12/28</p>
+</div>
+
+</div>
+
+
+<!-- Card Information -->
+
+<div style="margin-top:10px;">
+
+<div class="form-group">
+<label>Card Number</label>
+<input type="text" value="8600 1234 5678 4242" readonly>
+</div>
+
+<div class="row">
+
+<div class="form-group">
+<label>Expiry Date</label>
+<input type="text" value="12/28" readonly>
+</div>
+
+<div class="form-group">
+<label>CVV</label>
+<input type="text" value="123" readonly>
+</div>
+
+</div>
+
+<div class="form-group">
+<label>Card Holder</label>
+<input type="text" value="Rustam Juraev" readonly>
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}
+
