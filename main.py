@@ -1,4 +1,5 @@
 import os
+from flask import request
 from flask import Flask, render_template, redirect, url_for, session
 from flask_login import login_user, logout_user, current_user
 from models import db, Users,Wallet,Transactions
@@ -10,7 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, login_required
 from sqlalchemy import or_,select
 from flask_migrate import Migrate
-from utils import generate_expiry_date,generate_card_number, generate_cvc
+from utils import generate_expiry_date,generate_card_number, generate_cvc, is_valid_name, is_valid_email
 
 
 __all__ = [Users,Wallet,Transactions]
@@ -179,9 +180,64 @@ def logout():
     logout_user()
     return redirect(url_for("home_page"))
 
-@app.route("/send-money")
+@app.route("/send-money", methods=["GET","POST"])
 @login_required
 def send_money():
+    """I need to write the logic for sending money from one account to the other and implement mutex"""
+    if request.method == "POST":
+        name = request.form.get("recipient_name")
+        email = request.form.get("recipient_email")
+        amount = request.form.get("amount", type=float)
+        if not is_valid_name(name):
+            flask.flash("Invalid name, please try again with a valid name")
+            return redirect(url_for("send_money"))
+
+        if not is_valid_email(email):
+            flask.flash("Email address is not valid, please try again")
+            return redirect(url_for("send_money"))
+
+        sender = db.session.execute(
+            db.select(Users).where(Users.id == current_user.id)).with_for_update().scalar_one_or_none()
+
+        if sender.wallet.balance < amount:
+            flask.flash("There is not enough money in your bank account to make this transaction, please top up first")
+            return redirect(url_for("top_up"))
+
+        recipient = db.session.execute(
+            db.select(Users).where(Users.email == email)).with_for_update().scalar_one_or_none()
+        if recipient:
+            if recipient.name == name:
+                """i need to write my send money logic here and handle potential exceptions"""
+                try:
+                    sender.wallet.balance -= amount
+                    recipient.wallet.balance += amount
+
+                    """here i need to create a transaction object and populate it and commit it """
+                    sender_id = sender.id
+                    receiver_id = recipient.id
+                    status = "success"
+                    transaction_type = "transfer"
+                    new_transaction = Transactions(sender_id=sender_id,
+                                                   receiver_id=receiver_id,
+                                                   status=status,
+                                                   amount=amount,
+                                                   type=transaction_type)
+                    db.session.add(new_transaction)
+                    db.session.commit()
+
+                    return redirect(url_for("dashboard_page"))
+
+                except Exception as e:
+                    print(f"Error while completing the transaction: {e}")
+                    db.session.rollback()
+
+            else:
+                flask.flash(f"Names did not match on the database, did you mean: {recipient.name}")
+                return redirect(url_for("send_money"))
+        else:
+            flask.flash("Account not found from the database, please check that you have inserted the email correctly")
+            return redirect(url_for("send_money"))
+
     return render_template("send_money.html",user=current_user)
 
 @app.route("/top-up")

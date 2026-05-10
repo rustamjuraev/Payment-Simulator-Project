@@ -45,3 +45,16 @@ def generate_cvc():
     for x in range(0,3):
         cvc += str(random.randint(0,9))
     return cvc
+
+def is_valid_name(string):
+    if string == "":
+        return False
+    return True
+
+def is_valid_email(email):
+    if email.endswith("@gmail.com"):
+        return True
+    return False
+
+def rollback(sender):
+    return

@@ -12,7 +12,7 @@
 Available Balance: <strong>{{user.wallet.balance}} UZS</strong>
 </div>
 
-<form method="POST">
+<form action="{{url_for('send_money')}}" method="POST">
 
 <div class="form-group">
 <label>Recipient Name</label>
@@ -34,7 +34,7 @@ Available Balance: <strong>{{user.wallet.balance}} UZS</strong>
 <input type="text" name="note" placeholder="Payment for lunch">
 </div>
 
-<button class="primary-btn">Send Money</button>
+<button type="submit" class="primary-btn">Send Money</button>
 
 </form>
 
