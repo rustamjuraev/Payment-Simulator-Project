@@ -12,15 +12,23 @@ from flask_login import LoginManager, login_required
 from sqlalchemy import or_,select
 from flask_migrate import Migrate
 from utils import generate_expiry_date,generate_card_number, generate_cvc, is_valid_name, is_valid_email
-
+import stripe
+from flask_wtf.csrf import CSRFProtect
 
 __all__ = [Users,Wallet,Transactions]
+stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
+
+client = stripe.StripeClient(os.environ.get("STRIPE_SECRET_KEY"))
+endpoint_secret = os.environ.get("WEBHOOK_SECRET")
 
 app = Flask(__name__)
 bootstrap = Bootstrap5(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql+psycopg2://postgres:{os.environ['POSTGRES_PASSWORD']}@localhost:5432/flask_db"
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
+app.config["WTF_CSRF_CHECK_DEFAULT"] = True
 migrate = Migrate(app,db)
+csrf = CSRFProtect(app)
+
 db.init_app(app)
 with app.app_context():
     db.create_all()
@@ -240,10 +248,73 @@ def send_money():
 
     return render_template("send_money.html",user=current_user)
 
-@app.route("/top-up")
+@app.route("/top-up",methods=["GET","POST"])
 @login_required
 def top_up():
+    if request.method == "POST":
+        amount = request.form.get("amount", type=int)
+        if amount:
+            amount = int(amount)
+            payment_intent = stripe.PaymentIntent.create(
+                amount=amount*100,
+                currency="usd",
+                metadata={"user_id":current_user.id}
+            )
+            return render_template("stripe.html",
+                                   client_secret=payment_intent.client_secret,
+                                   stripe_public_key=os.environ.get("STRIPE_PUBLIC_KEY"))
+        else:
+            flask.flash("Invalid input given for amount, please try again")
+            return render_template("top_up.html")
+
     return render_template("top_up.html",user=current_user)
+
+
+@csrf.exempt
+@app.route("/webhook", methods=['POST'])
+def webhook():
+  print("Webhook received")
+  print(request.headers)
+  print("Webhook headers:", request.headers)
+  print("Webhook body:", request.data)
+  payload = request.get_data()
+  sig_header = request.headers.get("STRIPE_SIGNATURE")
+  event = None
+  try:
+      event = stripe.Webhook.construct_event(
+          payload, sig_header, endpoint_secret
+      )
+  except ValueError as e:
+    return "Invalid payload", 400
+
+  except stripe.error.SignatureVerificationError as e:
+    return "Invalid signature", 400
+
+  event_dict = event.to_dict()
+  if event_dict['type'] == "payment_intent.succeeded":
+    intent = event_dict['data']['object']
+    print("Succeeded: ", intent['id'])
+    """need to change balance here"""
+    amount = intent["amount"]
+    amount_usd = amount / 100
+    amount_uzs = amount_usd * 12000
+    user_id = int(intent["metadata"]["user_id"])
+    user = db.session.execute(db.select(Users).where(Users.id == user_id)).scalar_one()
+    try:
+        print("This part of the code is being executed now ")
+        user.wallet.balance += amount_uzs
+        db.session.commit()
+        return "Ok", 200
+
+    except Exception as e:
+        print(f"Error:{e}")
+
+  elif event_dict['type'] == "payment_intent.payment_failed":
+    intent = event_dict['data']['object']
+    error_message = intent['last_payment_error']['message'] if intent.get('last_payment_error') else None
+    print("Failed: ", intent['id']), error_message
+
+  return "OK", 200
 
 @app.route("/see-details")
 @login_required
