@@ -15,9 +15,8 @@
     </ul>
   {% endif %}
 {% endwith %}
-
-
-            {{render_form(form)}}
+        {{form.hidden_tag()}}
+        {{render_form(form)}}
     </div>
 </div>
 {% endblock %}

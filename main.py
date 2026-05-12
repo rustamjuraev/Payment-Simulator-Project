@@ -13,34 +13,30 @@ from sqlalchemy import or_,select
 from flask_migrate import Migrate
 from utils import generate_expiry_date,generate_card_number, generate_cvc, is_valid_name, is_valid_email
 import stripe
-from flask_wtf.csrf import CSRFProtect
 
 __all__ = [Users,Wallet,Transactions]
 stripe.api_key = os.environ["STRIPE_SECRET_KEY"]
 
-client = stripe.StripeClient(os.environ.get("STRIPE_SECRET_KEY"))
 endpoint_secret = os.environ.get("WEBHOOK_SECRET")
 
 app = Flask(__name__)
 bootstrap = Bootstrap5(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = f"postgresql+psycopg2://postgres:{os.environ['POSTGRES_PASSWORD']}@localhost:5432/flask_db"
 app.config["SECRET_KEY"] = os.environ["SECRET_KEY"]
-app.config["WTF_CSRF_CHECK_DEFAULT"] = True
+app.config['WTF_CSRF_ENABLED'] = False
 migrate = Migrate(app,db)
-csrf = CSRFProtect(app)
-
 db.init_app(app)
 with app.app_context():
     db.create_all()
 
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = 'login_page'
+
 
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(Users,int(user_id))
-""" First i need to go through the user authentication system as quickly as possible """
-
 
 @app.route("/")
 def home_page():
@@ -270,13 +266,9 @@ def top_up():
     return render_template("top_up.html",user=current_user)
 
 
-@csrf.exempt
 @app.route("/webhook", methods=['POST'])
 def webhook():
   print("Webhook received")
-  print(request.headers)
-  print("Webhook headers:", request.headers)
-  print("Webhook body:", request.data)
   payload = request.get_data()
   sig_header = request.headers.get("STRIPE_SIGNATURE")
   event = None
@@ -308,6 +300,8 @@ def webhook():
 
     except Exception as e:
         print(f"Error:{e}")
+    except stripe.error.SignatureVerificationError as e:
+        return '', 403  # Signature mismatch
 
   elif event_dict['type'] == "payment_intent.payment_failed":
     intent = event_dict['data']['object']
@@ -319,12 +313,23 @@ def webhook():
 @app.route("/see-details")
 @login_required
 def see_my_card():
-    return render_template("card_details.html")
+
+    return render_template("card_details.html", user=current_user)
 
 @app.route("/transactions")
 @login_required
 def transactions():
-    return "This is where i need to have my transaction list displayed!"
+    user = current_user
+    all_transactions = ((select(Transactions)
+                           .where(
+        or_(
+            Transactions.sender_id==user.wallet.id,
+            Transactions.receiver_id==user.wallet.id
+        )
+    )
+    ).order_by(Transactions.created_at.desc()))
+    all_transactions = db.session.execute(all_transactions).scalars().all()
+    return render_template("transactions.html", transactions=all_transactions)
 
 
 if __name__ == "__main__":
